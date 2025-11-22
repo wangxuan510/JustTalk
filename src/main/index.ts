@@ -1,5 +1,6 @@
-import { app, Menu, Tray, dialog } from 'electron';
+import { app, Menu, Tray, dialog, ipcMain } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { ConfigManager } from './ConfigManager';
 import { AppStateManager } from './AppStateManager';
 import { HotkeyManager } from './HotkeyManager';
@@ -55,6 +56,9 @@ async function initialize() {
     // 初始化配置窗口
     configWindow = new ConfigWindow();
 
+    // 注册 IPC 处理器（用于配置窗口的安全文件操作）
+    registerIpcHandlers();
+
     // 注册快捷键
     registerHotkeys();
 
@@ -71,6 +75,137 @@ async function initialize() {
     
     app.quit();
   }
+}
+
+/**
+ * 验证配置对象的完整性和安全性（P0 修复：IPC 安全验证）
+ */
+function validateConfigObject(config: any): void {
+  // 验证配置是对象
+  if (!config || typeof config !== 'object') {
+    throw new Error('无效的配置对象');
+  }
+
+  // 验证必需字段存在
+  if (!config.funASR || typeof config.funASR !== 'object') {
+    throw new Error('配置缺少 funASR 字段');
+  }
+  if (!config.hotkeys || typeof config.hotkeys !== 'object') {
+    throw new Error('配置缺少 hotkeys 字段');
+  }
+  if (!config.audio || typeof config.audio !== 'object') {
+    throw new Error('配置缺少 audio 字段');
+  }
+  if (!config.ui || typeof config.ui !== 'object') {
+    throw new Error('配置缺少 ui 字段');
+  }
+
+  // 验证 API Key 格式（如果提供）
+  if (config.funASR.apiKey && typeof config.funASR.apiKey === 'string') {
+    const apiKey = config.funASR.apiKey.trim();
+    if (apiKey.length > 0 && !apiKey.startsWith('sk-')) {
+      throw new Error('API Key 格式不正确（应以 sk- 开头）');
+    }
+    // 限制 API Key 长度，防止注入
+    if (apiKey.length > 200) {
+      throw new Error('API Key 长度超出限制');
+    }
+  }
+
+  // 验证 URL 格式
+  if (!config.funASR.url || typeof config.funASR.url !== 'string') {
+    throw new Error('URL 配置无效');
+  }
+  if (!config.funASR.url.startsWith('wss://')) {
+    throw new Error('URL 必须使用 wss:// 协议');
+  }
+  // 限制 URL 长度
+  if (config.funASR.url.length > 500) {
+    throw new Error('URL 长度超出限制');
+  }
+
+  // 验证模型名称
+  if (!config.funASR.model || typeof config.funASR.model !== 'string') {
+    throw new Error('模型配置无效');
+  }
+  const validModels = ['fun-asr-realtime', 'fun-asr-realtime-2025-11-07'];
+  if (!validModels.includes(config.funASR.model)) {
+    throw new Error('不支持的模型类型');
+  }
+
+  // 验证快捷键
+  if (!config.hotkeys.activate || typeof config.hotkeys.activate !== 'string') {
+    throw new Error('激活快捷键配置无效');
+  }
+  if (!config.hotkeys.deactivate || typeof config.hotkeys.deactivate !== 'string') {
+    throw new Error('停止快捷键配置无效');
+  }
+  // 限制快捷键长度
+  if (config.hotkeys.activate.length > 50 || config.hotkeys.deactivate.length > 50) {
+    throw new Error('快捷键配置长度超出限制');
+  }
+
+  // 验证音频配置
+  if (config.audio.sampleRate !== 16000) {
+    throw new Error('音频采样率必须为 16000 Hz');
+  }
+  if (config.audio.channels !== 1) {
+    throw new Error('音频必须为单声道');
+  }
+  if (config.audio.bitDepth !== 16) {
+    throw new Error('音频位深度必须为 16 bit');
+  }
+  if (config.audio.encoding !== 'signed-integer') {
+    throw new Error('音频编码必须为 signed-integer');
+  }
+}
+
+/**
+ * 注册 IPC 处理器（P0 修复：添加安全验证）
+ * 用于配置窗口的安全文件操作（在主进程中处理，而不是在 Preload 中）
+ */
+function registerIpcHandlers() {
+  const CONFIG_PATH = path.join(process.cwd(), 'config.json');
+
+  // 加载配置
+  ipcMain.handle('load-config', async () => {
+    try {
+      const configData = await fs.promises.readFile(CONFIG_PATH, 'utf-8');
+      const config = JSON.parse(configData);
+      
+      // 验证加载的配置
+      validateConfigObject(config);
+      
+      return config;
+    } catch (error) {
+      console.error('加载配置失败:', error);
+      throw error;
+    }
+  });
+
+  // 保存配置
+  ipcMain.handle('save-config', async (_event, config: any) => {
+    try {
+      // 严格验证配置对象
+      validateConfigObject(config);
+      
+      // 使用 ConfigManager 进行额外验证
+      const tempConfigManager = new ConfigManager();
+      // 访问私有方法进行验证
+      (tempConfigManager as any).validateConfig(config);
+      
+      // 验证通过后保存
+      await fs.promises.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+      
+      console.log('配置已安全保存');
+      return true;
+    } catch (error) {
+      console.error('保存配置失败:', error);
+      throw error;
+    }
+  });
+
+  console.log('IPC 处理器注册成功（已启用安全验证）');
 }
 
 /**

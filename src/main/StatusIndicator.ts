@@ -19,7 +19,7 @@ export class StatusIndicator {
       return;
     }
 
-    // 窗口尺寸（液态球，更小）
+    // 窗口尺寸（液态球，紫色）
     const windowWidth = 40;
     const windowHeight = 40;
 
@@ -58,8 +58,9 @@ export class StatusIndicator {
       hasShadow: false,         // 无阴影
       focusable: false,         // 不可获得焦点
       webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
+        nodeIntegration: false,  // 禁用 Node 集成（安全）
+        contextIsolation: true,  // 启用上下文隔离（安全）
+        preload: path.join(__dirname, '../preload/statusPreload.js'),
         backgroundThrottling: false,
       },
     });

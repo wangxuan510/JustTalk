@@ -1,15 +1,10 @@
-const { ipcRenderer } = require('electron');
-const fs = require('fs');
-const path = require('path');
-
-// 配置文件路径
-const CONFIG_PATH = path.join(process.cwd(), 'config.json');
+// 使用安全的 API
+const configAPI = window.configAPI;
 
 // 加载配置
-function loadConfig() {
+async function loadConfig() {
   try {
-    const configData = fs.readFileSync(CONFIG_PATH, 'utf-8');
-    return JSON.parse(configData);
+    return await configAPI.loadConfig();
   } catch (error) {
     console.error('加载配置失败:', error);
     showMessage('加载配置失败', 'error');
@@ -18,9 +13,9 @@ function loadConfig() {
 }
 
 // 保存配置
-function saveConfig(config) {
+async function saveConfig(config) {
   try {
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+    await configAPI.saveConfig(config);
     return true;
   } catch (error) {
     console.error('保存配置失败:', error);
@@ -165,9 +160,9 @@ function captureHotkey(event) {
 }
 
 // 初始化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // 加载配置
-  const config = loadConfig();
+  const config = await loadConfig();
   if (config) {
     populateForm(config);
   }
@@ -185,11 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 取消按钮
   document.getElementById('cancelBtn').addEventListener('click', () => {
-    window.close();
+    configAPI.closeWindow();
   });
 
   // 表单提交
-  document.getElementById('configForm').addEventListener('submit', (e) => {
+  document.getElementById('configForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const config = getFormData();
@@ -198,10 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (saveConfig(config)) {
+    if (await saveConfig(config)) {
       showMessage('配置已保存，重启应用后生效', 'success');
       setTimeout(() => {
-        window.close();
+        configAPI.closeWindow();
       }, 1500);
     }
   });

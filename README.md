@@ -13,7 +13,7 @@
 ## 系统要求
 
 - macOS 10.13 或更高版本
-- Intel 芯片
+- Intel 芯片（x64）或 Apple Silicon 芯片（M1/M2/M3）
 - 麦克风权限
 - 网络连接
 
@@ -25,7 +25,7 @@
 
 ## 配置
 
-### 首次使用配置
+哎，你现在在说话都录下来了。你干啥去了？干嘛呢？我想起来我的时代没了，回来。### 首次使用配置
 
 1. **复制配置文件**
    ```bash
@@ -125,7 +125,17 @@ npm run build
 生成可分发的应用：
 
 ```bash
+# 同时构建 Intel 和 Apple Silicon 版本
 npm run dist
+
+# 只构建 Intel 版本（x64）
+npm run dist:mac-intel
+
+# 只构建 Apple Silicon 版本（arm64）
+npm run dist:mac-arm
+
+# 构建通用版本（同时支持两种架构，文件较大）
+npm run dist:universal
 ```
 
 这将在 `dist` 目录下生成 .dmg 安装包。

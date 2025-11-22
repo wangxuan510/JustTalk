@@ -31,18 +31,18 @@
     }
 
     .liquid-blob {
-      width: 24px;
-      height: 24px;
-      background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
       border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
       animation: blob-pulse 3s ease-in-out infinite;
-      box-shadow: 0 3px 10px rgba(0, 114, 255, 0.4);
+      box-shadow: 0 3px 10px rgba(124, 58, 237, 0.4);
     }
 
-    /* 监听状态 - 蓝色 */
+    /* 监听状态 - 紫色 */
     .listening .liquid-blob {
-      background: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
-      box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+      background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
+      box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
     }
 
     /* 处理状态 - 绿色 */
@@ -63,17 +63,17 @@
       0% {
         transform: scale(1);
         border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-        box-shadow: 0 0 0 0 rgba(0, 114, 255, 0.7);
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
       }
       50% {
         transform: scale(1.15);
         border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-        box-shadow: 0 0 0 8px rgba(0, 114, 255, 0);
+        box-shadow: 0 0 0 8px rgba(124, 58, 237, 0);
       }
       100% {
         transform: scale(1);
         border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-        box-shadow: 0 0 0 0 rgba(0, 114, 255, 0.7);
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
       }
     }
 
@@ -95,20 +95,24 @@
     <div class="liquid-blob"></div>
   </div>
   <script>
-    const { ipcRenderer } = require('electron');
     const indicator = document.getElementById('indicator');
     const blob = document.querySelector('.liquid-blob');
 
-    // 监听状态更新
-    ipcRenderer.on('update-status', (event, status) => {
-      indicator.className = `liquid-container ${status}`;
-    });
+    // 使用安全的 API
+    if (window.electronAPI) {
+      // 监听状态更新
+      window.electronAPI.onUpdateStatus((status) => {
+        indicator.className = `liquid-container ${status}`;
+      });
 
-    // 监听音量更新 - 根据音量调整大小
-    ipcRenderer.on('update-volume', (event, volume) => {
-      const scale = 1 + volume * 0.2; // 1.0 到 1.2
-      blob.style.transform = `scale(${scale})`;
-    });
+      // 监听音量更新 - 根据音量调整大小
+      window.electronAPI.onUpdateVolume((volume) => {
+        const scale = 1 + volume * 0.2; // 1.0 到 1.2
+        blob.style.transform = `scale(${scale})`;
+      });
+    } else {
+      console.error('electronAPI 未定义');
+    }
   </script>
 </body>
 </html>

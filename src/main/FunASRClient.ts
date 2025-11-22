@@ -19,6 +19,13 @@ export class FunASRClient extends EventEmitter {
   private currentTaskId: string | null = null;
   private isConnected: boolean = false;
   private isTaskRunning: boolean = false;
+  
+  // 重连机制
+  private reconnectAttempts: number = 0;
+  private readonly MAX_RECONNECT_ATTEMPTS = 3;
+  private readonly RECONNECT_DELAY = 2000; // 2 秒
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private isReconnecting: boolean = false;
 
   constructor() {
     super();
@@ -36,18 +43,31 @@ export class FunASRClient extends EventEmitter {
     this.config = config;
 
     return new Promise((resolve, reject) => {
+      // 设置连接超时
+      const connectionTimeout = setTimeout(() => {
+        console.error('WebSocket 连接超时');
+        if (this.ws) {
+          this.ws.close();
+        }
+        reject(new Error('连接超时（10秒）'));
+      }, 10000); // 10 秒超时
+
       try {
         // 创建 WebSocket 连接，在 Header 中添加 Authorization
         this.ws = new WebSocket(config.url, {
           headers: {
             Authorization: `bearer ${config.apiKey}`,
           },
+          handshakeTimeout: 10000, // 握手超时
         });
 
         // 连接打开
         this.ws.on('open', () => {
+          clearTimeout(connectionTimeout);
           console.log('WebSocket 连接已建立');
           this.isConnected = true;
+          this.reconnectAttempts = 0; // 重置重连计数
+          this.isReconnecting = false;
           resolve();
         });
 
@@ -58,6 +78,7 @@ export class FunASRClient extends EventEmitter {
 
         // 连接错误
         this.ws.on('error', (error: Error) => {
+          clearTimeout(connectionTimeout);
           console.error('WebSocket 错误:', error);
           
           // 忽略 write EIO 等连接关闭后的错误
@@ -68,20 +89,88 @@ export class FunASRClient extends EventEmitter {
           }
           
           this.emit('error', error);
-          reject(error);
+          
+          // 只在首次连接时 reject
+          if (!this.isConnected) {
+            reject(error);
+          }
         });
 
         // 连接关闭
-        this.ws.on('close', () => {
-          console.log('WebSocket 连接已关闭');
+        this.ws.on('close', (code: number, reason: string) => {
+          clearTimeout(connectionTimeout);
+          console.log(`WebSocket 连接已关闭 (code: ${code}, reason: ${reason})`);
+          
+          const wasConnected = this.isConnected;
+          const wasTaskRunning = this.isTaskRunning;
+          
           this.isConnected = false;
           this.isTaskRunning = false;
           this.currentTaskId = null;
+
+          // 发出连接断开事件，通知 AppStateManager
+          if (wasConnected) {
+            this.emit('disconnected', { wasTaskRunning });
+          }
+
+          // 如果之前已连接且不是主动断开，尝试重连
+          if (wasConnected && !this.isReconnecting && this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
+            this.scheduleReconnect();
+          }
         });
       } catch (error) {
+        clearTimeout(connectionTimeout);
         reject(error);
       }
     });
+  }
+
+  /**
+   * 安排重连
+   */
+  private scheduleReconnect(): void {
+    if (this.reconnectTimeout) {
+      return; // 已经在重连中
+    }
+
+    this.reconnectAttempts++;
+    this.isReconnecting = true;
+    
+    console.log(`将在 ${this.RECONNECT_DELAY}ms 后尝试第 ${this.reconnectAttempts} 次重连...`);
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      this.reconnect();
+    }, this.RECONNECT_DELAY);
+  }
+
+  /**
+   * 重新连接
+   */
+  private async reconnect(): Promise<void> {
+    if (!this.config) {
+      console.error('无法重连：配置为空');
+      return;
+    }
+
+    try {
+      console.log(`正在尝试重连... (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
+      await this.connect(this.config);
+      console.log('重连成功');
+      
+      // 发出重连成功事件，让 AppStateManager 恢复任务
+      this.emit('reconnected');
+    } catch (error) {
+      console.error('重连失败:', error);
+      
+      if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
+        this.scheduleReconnect();
+      } else {
+        console.error('已达到最大重连次数，放弃重连');
+        this.isReconnecting = false;
+        this.emit('error', new Error('连接失败：已达到最大重连次数'));
+      }
+    }
   }
 
   /**
@@ -295,13 +384,26 @@ export class FunASRClient extends EventEmitter {
    * 断开连接
    */
   public disconnect(): void {
+    // 清除重连定时器
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    
+    // 标记为主动断开，防止自动重连
+    this.isReconnecting = false;
+    this.reconnectAttempts = this.MAX_RECONNECT_ATTEMPTS; // 设置为最大值，阻止重连
+    
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
+    
     this.isConnected = false;
     this.isTaskRunning = false;
     this.currentTaskId = null;
+    
+    console.log('已断开 FunASR 连接');
   }
 
   /**
@@ -316,5 +418,12 @@ export class FunASRClient extends EventEmitter {
    */
   public getTaskStatus(): boolean {
     return this.isTaskRunning;
+  }
+
+  /**
+   * 获取重连状态
+   */
+  public isReconnectingNow(): boolean {
+    return this.isReconnecting;
   }
 }

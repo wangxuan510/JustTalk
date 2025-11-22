@@ -4,11 +4,15 @@
   "description": "实时语音转文字工具，使用阿里 FunASR 服务",
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc && mkdir -p dist/assets dist/renderer && cp -r src/assets/* dist/assets/ 2>/dev/null || true && cp src/renderer/*.html dist/renderer/ && cp src/renderer/*.js dist/renderer/ 2>/dev/null || true",
+    "build": "tsc && mkdir -p dist/assets dist/renderer dist/preload && cp -r src/assets/* dist/assets/ 2>/dev/null || true && cp src/renderer/*.html dist/renderer/ && cp src/renderer/*.js dist/renderer/ 2>/dev/null || true",
     "start": "npm run build && electron .",
-    "dev": "npm run check-config && tsc && mkdir -p dist/assets dist/renderer && cp -r src/assets/* dist/assets/ 2>/dev/null || true && cp src/renderer/*.html dist/renderer/ && cp src/renderer/*.js dist/renderer/ 2>/dev/null || true && electron .",
+    "dev": "npm run check-config && tsc && mkdir -p dist/assets dist/renderer dist/preload && cp -r src/assets/* dist/assets/ 2>/dev/null || true && cp src/renderer/*.html dist/renderer/ && cp src/renderer/*.js dist/renderer/ 2>/dev/null || true && electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:mac-intel": "electron-builder --mac --x64",
+    "dist:mac-arm": "electron-builder --mac --arm64",
+    "dist:universal": "electron-builder --mac --universal",
     "check-config": "node scripts/check-config.js",
     "setup": "cp config.example.json config.json && echo '✅ 配置文件已创建，请编辑 config.json 填入你的 API Key'"
   },
@@ -40,10 +44,13 @@
     "productName": "VoiceToText",
     "mac": {
       "target": [
-        "dmg"
-      ],
-      "arch": [
-        "x64"
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "category": "public.app-category.productivity",
       "extendInfo": {
