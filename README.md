@@ -25,26 +25,54 @@
 
 ## 配置
 
-### 获取 API Key
+### 首次使用配置
 
-1. 访问 [阿里云 DashScope](https://dashscope.aliyuncs.com/)
-2. 注册并获取 API Key
-3. 配置 API Key：
+1. **复制配置文件**
+   ```bash
+   cp config.example.json config.json
+   ```
 
-**方法 1：环境变量（推荐）**
-```bash
-export DASHSCOPE_API_KEY="your-api-key"
-```
+2. **获取 API Key**
+   - 访问 [阿里云 DashScope](https://dashscope.aliyuncs.com/)
+   - 注册并登录
+   - 在控制台获取 API Key
 
-**方法 2：配置文件**
-编辑 `config.json` 文件，填入 API Key：
-```json
-{
-  "funASR": {
-    "apiKey": "your-api-key"
-  }
-}
-```
+3. **配置 API Key**
+   
+   编辑 `config.json` 文件，将 `your-dashscope-api-key-here` 替换为你的实际 API Key：
+   ```json
+   {
+     "funASR": {
+       "apiKey": "sk-xxxxxxxxxxxxxxxxxxxxxxxx",
+       "url": "wss://dashscope.aliyuncs.com/api-ws/v1/inference",
+       "model": "fun-asr-realtime"
+     }
+   }
+   ```
+
+4. **自定义快捷键（可选）**
+   
+   在 `config.json` 中修改快捷键：
+   ```json
+   {
+     "hotkeys": {
+       "activate": "Command+2",
+       "deactivate": "Command+2"
+     }
+   }
+   ```
+
+### 配置说明
+
+- `funASR.apiKey`: 阿里云 DashScope API Key（必填）
+- `funASR.url`: FunASR WebSocket 服务地址（默认即可）
+- `funASR.model`: 使用的模型（默认 fun-asr-realtime）
+- `hotkeys.activate`: 激活语音识别的快捷键
+- `hotkeys.deactivate`: 停止语音识别的快捷键（可与 activate 相同，实现切换）
+- `audio`: 音频参数（默认即可）
+- `ui.indicatorPosition`: 状态指示器位置（默认 top-right）
+
+**注意**: `config.json` 包含敏感信息，已被 .gitignore 忽略，不会被提交到 Git 仓库。
 
 ## 使用方法
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>配置 - 语音转文字工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 24px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: #6e6e73;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus {
+      border-color: #0071e3;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #86868b;
+      margin-top: 4px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #0071e3;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0077ed;
+    }
+
+    .btn-primary:active {
+      background: #006edb;
+    }
+
+    .btn-secondary {
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+
+    .btn-secondary:hover {
+      background: #e8e8ed;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .message.success {
+      background: #d1f4e0;
+      color: #0a6e31;
+      display: block;
+    }
+
+    .message.error {
+      background: #fde8e8;
+      color: #c41e3a;
+      display: block;
+    }
+
+    .hotkey-input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .hotkey-input input {
+      flex: 1;
+    }
+
+    .hotkey-capture {
+      padding: 10px 16px;
+      background: #f5f5f7;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .hotkey-capture:hover {
+      background: #e8e8ed;
+    }
+
+    .hotkey-capture.capturing {
+      background: #0071e3;
+      color: white;
+      border-color: #0071e3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>配置</h1>
+
+    <div id="message" class="message"></div>
+
+    <form id="configForm">
+      <!-- FunASR 配置 -->
+      <div class="section">
+        <div class="section-title">FunASR 服务</div>
+        
+        <div class="form-group">
+          <label for="apiKey">API Key *</label>
+          <input type="password" id="apiKey" required>
+          <div class="hint">阿里云 DashScope API Key（以 sk- 开头）</div>
+        </div>
+
+        <div class="form-group">
+          <label for="url">服务地址</label>
+          <input type="text" id="url" required>
+          <div class="hint">WebSocket 服务地址</div>
+        </div>
+
+        <div class="form-group">
+          <label for="model">模型</label>
+          <select id="model">
+            <option value="fun-asr-realtime">fun-asr-realtime（实时识别）</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 快捷键配置 -->
+      <div class="section">
+        <div class="section-title">快捷键</div>
+        
+        <div class="form-group">
+          <label for="activateKey">激活快捷键</label>
+          <div class="hotkey-input">
+            <input type="text" id="activateKey" readonly required>
+            <button type="button" class="hotkey-capture" data-target="activateKey">录制</button>
+          </div>
+          <div class="hint">点击"录制"按钮，然后按下你想要的快捷键组合</div>
+        </div>
+
+        <div class="form-group">
+          <label for="deactivateKey">停止快捷键</label>
+          <div class="hotkey-input">
+            <input type="text" id="deactivateKey" readonly required>
+            <button type="button" class="hotkey-capture" data-target="deactivateKey">录制</button>
+          </div>
+          <div class="hint">可以与激活快捷键相同，实现切换功能</div>
+        </div>
+      </div>
+
+      <!-- 按钮 -->
+      <div class="button-group">
+        <button type="button" class="btn-secondary" id="cancelBtn">取消</button>
+        <button type="submit" class="btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="config.js"></script>
+</body>
+</html>

@@ -4,11 +4,13 @@ import { ConfigManager } from './ConfigManager';
 import { AppStateManager } from './AppStateManager';
 import { HotkeyManager } from './HotkeyManager';
 import { PermissionManager } from './PermissionManager';
+import { ConfigWindow } from './ConfigWindow';
 
 // 全局变量
 let configManager: ConfigManager;
 let appStateManager: AppStateManager;
 let hotkeyManager: HotkeyManager;
+let configWindow: ConfigWindow;
 let tray: Tray | null = null;
 
 /**
@@ -49,6 +51,9 @@ async function initialize() {
       config.hotkeys.activate,
       config.hotkeys.deactivate
     );
+
+    // 初始化配置窗口
+    configWindow = new ConfigWindow();
 
     // 注册快捷键
     registerHotkeys();
@@ -198,7 +203,9 @@ function createTray() {
     { type: 'separator' },
     {
       label: '配置',
-      enabled: false, // 暂时禁用
+      click: () => {
+        configWindow.show();
+      },
     },
     { type: 'separator' },
     {

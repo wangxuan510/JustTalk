@@ -37,23 +37,38 @@ npm install
 
 ### 4. 配置 API Key
 
-**方法 1: 环境变量（推荐）**
+**步骤 1: 复制配置文件**
 
 ```bash
-export DASHSCOPE_API_KEY="your-api-key-here"
+cp config.example.json config.json
 ```
 
-**方法 2: 配置文件**
+**步骤 2: 获取 API Key**
 
-编辑 `config.json`:
+1. 访问 https://dashscope.aliyuncs.com/
+2. 注册/登录阿里云账号
+3. 开通 DashScope 服务
+4. 在控制台获取 API Key
+
+**步骤 3: 编辑配置文件**
+
+编辑 `config.json`，将 `your-dashscope-api-key-here` 替换为你的实际 API Key:
 
 ```json
 {
   "funASR": {
-    "apiKey": "your-api-key-here"
+    "apiKey": "sk-xxxxxxxxxxxxxxxxxxxxxxxx",
+    "url": "wss://dashscope.aliyuncs.com/api-ws/v1/inference",
+    "model": "fun-asr-realtime"
+  },
+  "hotkeys": {
+    "activate": "Command+2",
+    "deactivate": "Command+2"
   }
 }
 ```
+
+**重要**: `config.json` 包含敏感信息，不要提交到 Git 仓库！
 
 ### 5. 编译 TypeScript
 
@@ -135,12 +150,11 @@ npm run dev
 
 如果一切正常，应该会看到应用启动并显示欢迎消息。
 
-## 获取 API Key
+## 安全提示
 
-1. 访问 https://dashscope.aliyuncs.com/
-2. 注册/登录阿里云账号
-3. 开通 DashScope 服务
-4. 在控制台获取 API Key
+- `config.json` 包含你的 API Key，已被 .gitignore 忽略
+- 不要将 `config.json` 提交到公开仓库
+- 如果不小心泄露了 API Key，请立即在阿里云控制台重置
 
 ## 下一步
 

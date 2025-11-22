@@ -1,0 +1,20 @@
+{
+  "funASR": {
+    "apiKey": "your-dashscope-api-key-here",
+    "url": "wss://dashscope.aliyuncs.com/api-ws/v1/inference",
+    "model": "fun-asr-realtime"
+  },
+  "hotkeys": {
+    "activate": "Command+2",
+    "deactivate": "Command+2"
+  },
+  "audio": {
+    "sampleRate": 16000,
+    "channels": 1,
+    "bitDepth": 16,
+    "encoding": "signed-integer"
+  },
+  "ui": {
+    "indicatorPosition": "top-right"
+  }
+}
