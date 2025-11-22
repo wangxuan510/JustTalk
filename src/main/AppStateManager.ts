@@ -4,6 +4,7 @@ import { AudioCapture } from './AudioCapture';
 import { TextInjector } from './TextInjector';
 import { StatusIndicator } from './StatusIndicator';
 import { dialog } from 'electron';
+import * as robot from 'robotjs';
 
 export class AppStateManager {
   private state: AppState = 'idle';
@@ -26,7 +27,7 @@ export class AppStateManager {
     this.funasrClient = new FunASRClient();
     this.audioCapture = new AudioCapture(config.audio);
     this.textInjector = new TextInjector();
-    this.statusIndicator = new StatusIndicator(config.ui.indicatorPosition);
+    this.statusIndicator = new StatusIndicator();
 
     // 设置事件监听
     this.setupEventListeners();
@@ -39,7 +40,6 @@ export class AppStateManager {
     // FunASR 事件
     this.funasrClient.on('task-started', () => {
       console.log('FunASR 任务已启动');
-      this.statusIndicator.updateStatus('listening');
     });
 
     this.funasrClient.on('result-generated', (result: RecognitionResult) => {
@@ -96,9 +96,10 @@ export class AppStateManager {
       // 更新状态
       this.state = 'active';
 
-      // 显示状态指示器
-      this.statusIndicator.show();
-      this.statusIndicator.updateStatus('processing');
+      // 获取鼠标位置并显示状态指示器
+      const mousePos = robot.getMousePos();
+      this.statusIndicator.show(mousePos.x, mousePos.y);
+      this.statusIndicator.updateStatus('listening');
 
       // 连接到 FunASR（如果尚未连接）
       if (!this.funasrClient.getConnectionStatus()) {
@@ -117,6 +118,10 @@ export class AppStateManager {
       // 启动音频捕获
       console.log('启动音频捕获...');
       await this.audioCapture.start();
+
+      // 重新激活输入框：模拟点击当前鼠标位置
+      // 这样可以恢复输入框的焦点
+      await this.textInjector.refocusInputField();
 
       console.log('语音识别已激活');
     } catch (error) {
@@ -166,6 +171,10 @@ export class AppStateManager {
    */
   private handleAudioData(chunk: Buffer): void {
     try {
+      // 计算音量并更新状态指示器
+      const volume = AudioCapture.calculateVolume(chunk);
+      this.statusIndicator.updateVolume(volume);
+
       // 将音频数据发送到 FunASR
       if (this.funasrClient.getTaskStatus()) {
         this.funasrClient.sendAudio(chunk);
@@ -226,14 +235,30 @@ export class AppStateManager {
         const similarity = minLen / maxLen;
         
         if (similarity > 0.3 && oldText.length > 0) {
-          // 相似度 > 30%，可能是识别修正，删除旧文本重新输入
-          const deleteCount = Math.min(this.lastTypedLength, 100);
-          if (deleteCount > 0) {
-            console.log(`识别修正：删除 ${deleteCount} 个字符，重新输入`);
-            await this.textInjector.deleteText(deleteCount);
-            this.lastTypedLength = 0;
+          // 相似度 > 30%，可能是识别修正
+          // 找出不同的部分，只更新差异
+          let commonPrefixLen = 0;
+          const minLength = Math.min(oldText.length, newText.length);
+          
+          // 找出相同的前缀长度
+          for (let i = 0; i < minLength; i++) {
+            if (oldText[i] === newText[i]) {
+              commonPrefixLen++;
+            } else {
+              break;
+            }
           }
-          textToAdd = newText;
+          
+          // 计算需要删除和添加的部分
+          const deleteCount = oldText.length - commonPrefixLen;
+          const addText = newText.substring(commonPrefixLen);
+          
+          if (deleteCount > 0) {
+            console.log(`识别修正：删除 ${deleteCount} 个字符，添加 "${addText}"`);
+            await this.textInjector.deleteText(deleteCount);
+          }
+          
+          textToAdd = addText;
         } else {
           // 相似度低，是新句子，直接追加
           console.log('检测到新句子，直接追加');
@@ -244,19 +269,26 @@ export class AppStateManager {
       
       // 输入新增的文字
       if (textToAdd.length > 0) {
-        await this.textInjector.typeText(textToAdd);
-        
-        if (isNewSentence) {
-          // 新句子，重新计数
-          this.lastTypedLength = textToAdd.length;
-        } else {
-          // 同一句话的扩展，累加计数
-          this.lastTypedLength += textToAdd.length;
+        console.log(`准备输入文字: "${textToAdd}"`);
+        try {
+          await this.textInjector.typeText(textToAdd);
+          console.log('文字输入成功');
+        } catch (error) {
+          console.error('文字输入失败:', error);
+          throw error;
         }
       }
       
-      // 更新当前文本
+      // 更新当前文本和计数
       this.currentText = newText;
+      
+      if (isNewSentence) {
+        // 新句子，重新计数（只记录当前句子的长度）
+        this.lastTypedLength = newText.length;
+      } else {
+        // 同一句话，更新为当前句子的总长度
+        this.lastTypedLength = newText.length;
+      }
     } catch (error) {
       console.error('处理识别结果失败:', error);
       
@@ -278,7 +310,6 @@ export class AppStateManager {
     }
     
     this.state = 'error';
-    this.statusIndicator.updateStatus('error');
     
     // 显示错误消息
     this.showError(message);

@@ -57,14 +57,6 @@ async function initialize() {
     createTray();
 
     console.log('应用初始化完成');
-    
-    // 显示欢迎消息
-    dialog.showMessageBox({
-      type: 'info',
-      title: '语音转文字工具',
-      message: '应用已启动',
-      detail: `激活快捷键: ${config.hotkeys.activate}\n关闭快捷键: ${config.hotkeys.deactivate}\n\n请先点击输入框，然后按快捷键开始语音输入。`,
-    });
   } catch (error) {
     console.error('初始化失败:', error);
     
@@ -80,32 +72,67 @@ async function initialize() {
  * 注册全局快捷键
  */
 function registerHotkeys() {
-  // 注册激活快捷键
-  const activationSuccess = hotkeyManager.registerActivationHotkey(() => {
-    console.log('激活快捷键触发');
-    appStateManager.activate().catch(error => {
-      console.error('激活失败:', error);
+  const config = configManager.getConfig();
+  
+  // 检查是否使用同一个快捷键
+  const useSameKey = config.hotkeys.activate === config.hotkeys.deactivate;
+  
+  if (useSameKey) {
+    // 使用同一个快捷键切换
+    const success = hotkeyManager.registerActivationHotkey(() => {
+      console.log('切换快捷键触发');
+      const currentState = appStateManager.getState();
+      
+      if (currentState === 'active') {
+        // 当前激活，则关闭
+        appStateManager.deactivate();
+      } else {
+        // 当前未激活，则激活
+        appStateManager.activate().catch(error => {
+          console.error('激活失败:', error);
+        });
+      }
     });
-  });
 
-  if (!activationSuccess) {
-    dialog.showErrorBox(
-      '快捷键注册失败',
-      `无法注册激活快捷键: ${hotkeyManager.getActivationHotkey()}\n可能已被其他应用占用。`
-    );
-  }
+    if (!success) {
+      dialog.showErrorBox(
+        '快捷键注册失败',
+        `无法注册快捷键: ${config.hotkeys.activate}\n可能已被其他应用占用。`
+      );
+    } else {
+      console.log(`切换快捷键注册成功: ${config.hotkeys.activate}`);
+    }
+  } else {
+    // 使用不同的快捷键
+    const activationSuccess = hotkeyManager.registerActivationHotkey(() => {
+      console.log('激活快捷键触发');
+      appStateManager.activate().catch(error => {
+        console.error('激活失败:', error);
+      });
+    });
 
-  // 注册关闭快捷键
-  const deactivationSuccess = hotkeyManager.registerDeactivationHotkey(() => {
-    console.log('关闭快捷键触发');
-    appStateManager.deactivate();
-  });
+    if (!activationSuccess) {
+      dialog.showErrorBox(
+        '快捷键注册失败',
+        `无法注册激活快捷键: ${config.hotkeys.activate}\n可能已被其他应用占用。`
+      );
+    } else {
+      console.log(`激活快捷键注册成功: ${config.hotkeys.activate}`);
+    }
 
-  if (!deactivationSuccess) {
-    dialog.showErrorBox(
-      '快捷键注册失败',
-      `无法注册关闭快捷键: ${hotkeyManager.getDeactivationHotkey()}\n可能已被其他应用占用。`
-    );
+    const deactivationSuccess = hotkeyManager.registerDeactivationHotkey(() => {
+      console.log('关闭快捷键触发');
+      appStateManager.deactivate();
+    });
+
+    if (!deactivationSuccess) {
+      dialog.showErrorBox(
+        '快捷键注册失败',
+        `无法注册关闭快捷键: ${config.hotkeys.deactivate}\n可能已被其他应用占用。`
+      );
+    } else {
+      console.log(`关闭快捷键注册成功: ${config.hotkeys.deactivate}`);
+    }
   }
 }
 
@@ -113,45 +140,105 @@ function registerHotkeys() {
  * 创建托盘图标
  */
 function createTray() {
-  // 创建托盘图标（可选）
-  // 注意：需要准备一个图标文件
-  // tray = new Tray(path.join(__dirname, '../assets/icon.png'));
+  // 创建托盘图标
+  // 使用项目中的图标文件
+  const { nativeImage } = require('electron');
+  const iconPath = path.join(__dirname, '../assets/icon.png');
+  
+  // 加载图标并调整尺寸
+  // macOS 托盘图标标准尺寸是 16x16（普通屏）和 32x32（Retina 屏）
+  let icon = nativeImage.createFromPath(iconPath);
+  icon = icon.resize({ width: 16, height: 16 });
+  
+  tray = new Tray(icon);
+  
+  const config = configManager.getConfig();
   
   // 创建托盘菜单
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: '关于',
+  const useSameKey = config.hotkeys.activate === config.hotkeys.deactivate;
+  
+  const menuTemplate: any[] = [];
+  
+  if (useSameKey) {
+    // 使用同一个快捷键，显示切换选项
+    menuTemplate.push({
+      label: `切换语音输入 (${config.hotkeys.activate})`,
       click: () => {
-        const config = configManager.getConfig();
-        dialog.showMessageBox({
-          type: 'info',
-          title: '关于',
-          message: '语音转文字工具',
-          detail: `版本: 1.0.0\n\n激活快捷键: ${config.hotkeys.activate}\n关闭快捷键: ${config.hotkeys.deactivate}`,
-        });
+        const currentState = appStateManager.getState();
+        if (currentState === 'active') {
+          appStateManager.deactivate();
+        } else {
+          appStateManager.activate().catch(error => {
+            console.error('激活失败:', error);
+          });
+        }
       },
-    },
+    });
+  } else {
+    // 使用不同的快捷键，显示启动和结束选项
+    menuTemplate.push(
+      {
+        label: `启动 (${config.hotkeys.activate})`,
+        click: () => {
+          appStateManager.activate().catch(error => {
+            console.error('启动失败:', error);
+          });
+        },
+      },
+      {
+        label: `结束 (${config.hotkeys.deactivate})`,
+        click: () => {
+          appStateManager.deactivate();
+        },
+      }
+    );
+  }
+  
+  menuTemplate.push(
+    { type: 'separator' },
     {
-      label: '打开权限设置',
-      click: () => {
-        PermissionManager.openSystemPreferences();
-      },
+      label: '配置',
+      enabled: false, // 暂时禁用
     },
     { type: 'separator' },
     {
-      label: '退出',
+      label: '关闭',
       click: () => {
-        app.quit();
+        // 清理资源
+        if (appStateManager) {
+          appStateManager.cleanup();
+        }
+        if (hotkeyManager) {
+          hotkeyManager.unregisterAll();
+        }
+        // 强制退出
+        app.exit(0);
       },
-    },
-  ]);
+    }
+  );
+  
+  const contextMenu = Menu.buildFromTemplate(menuTemplate);
 
-  // 如果有托盘图标，设置菜单
-  if (tray) {
-    tray.setContextMenu(contextMenu);
-    tray.setToolTip('语音转文字工具');
-  }
+  tray.setContextMenu(contextMenu);
+  tray.setToolTip('语音转文字工具');
 }
+
+/**
+ * 配置应用为后台应用，不抢夺焦点
+ */
+// 设置应用为后台应用（不出现在 Dock，不抢夺焦点）
+app.dock?.hide();
+
+// 阻止应用在快捷键触发时激活
+app.on('browser-window-focus', (event) => {
+  // 阻止窗口获得焦点
+  event.preventDefault();
+});
+
+// 阻止应用激活
+app.on('activate', (event) => {
+  event.preventDefault();
+});
 
 /**
  * 单实例锁定

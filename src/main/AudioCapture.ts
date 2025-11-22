@@ -122,4 +122,35 @@ export class AudioCapture extends EventEmitter {
   public getAudioConfig(): AudioConfig {
     return this.audioConfig;
   }
+
+  /**
+   * 计算音频数据的音量（0-1 范围）
+   */
+  public static calculateVolume(buffer: Buffer): number {
+    if (!buffer || buffer.length === 0) {
+      return 0;
+    }
+
+    // 将 Buffer 转换为 16 位 PCM 样本
+    const samples = new Int16Array(
+      buffer.buffer,
+      buffer.byteOffset,
+      buffer.length / 2
+    );
+
+    // 计算 RMS（均方根）音量
+    let sum = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const normalized = samples[i] / 32768; // 归一化到 -1 到 1
+      sum += normalized * normalized;
+    }
+
+    const rms = Math.sqrt(sum / samples.length);
+    
+    // 应用对数缩放，使音量变化更明显
+    // 并限制在 0-1 范围内
+    const volume = Math.min(1, rms * 5);
+    
+    return volume;
+  }
 }

@@ -57,14 +57,12 @@ export class TextInjector {
    * 直接输入文字（使用 robotjs）
    */
   private async typeTextDirect(text: string): Promise<void> {
-    // 逐字符输入
-    for (const char of text) {
-      robot.typeString(char);
-      
-      // 添加延迟，避免输入过快导致丢失字符
-      if (this.typingDelay > 0) {
-        await this.sleep(this.typingDelay);
-      }
+    // 一次性输入整个字符串（对中文支持更好）
+    robot.typeString(text);
+    
+    // 添加延迟
+    if (this.typingDelay > 0) {
+      await this.sleep(this.typingDelay);
     }
   }
 
@@ -107,6 +105,27 @@ export class TextInjector {
     
     // 这里我们返回 true，让用户负责确保输入框已激活
     return true;
+  }
+
+  /**
+   * 重新激活输入框
+   * 通过点击当前鼠标位置来恢复输入框焦点
+   */
+  public async refocusInputField(): Promise<void> {
+    try {
+      // 获取当前鼠标位置
+      const mouse = robot.getMousePos();
+      
+      // 点击当前位置（恢复焦点）
+      robot.mouseClick();
+      
+      // 等待输入框激活
+      await this.sleep(100);
+      
+      console.log('已重新激活输入框');
+    } catch (error) {
+      console.error('重新激活输入框失败:', error);
+    }
   }
 
   /**

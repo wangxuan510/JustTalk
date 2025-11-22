@@ -14,42 +14,29 @@ export class StatusIndicator {
   /**
    * 创建状态指示器窗口
    */
-  private createWindow(): void {
+  private createWindow(mouseX?: number, mouseY?: number): void {
     if (this.window) {
       return;
     }
 
-    // 获取屏幕尺寸
-    const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+    // 窗口尺寸（方形，更小）
+    const windowWidth = 60;
+    const windowHeight = 60;
 
-    // 窗口尺寸
-    const windowWidth = 120;
-    const windowHeight = 120;
-
-    // 根据位置计算坐标
+    // 如果提供了鼠标位置，在鼠标右下角显示
+    // 否则使用默认位置
     let x = 0;
     let y = 0;
 
-    switch (this.position) {
-      case 'top-right':
-        x = screenWidth - windowWidth - 20;
-        y = 20;
-        break;
-      case 'top-left':
-        x = 20;
-        y = 20;
-        break;
-      case 'bottom-right':
-        x = screenWidth - windowWidth - 20;
-        y = screenHeight - windowHeight - 20;
-        break;
-      case 'bottom-left':
-        x = 20;
-        y = screenHeight - windowHeight - 20;
-        break;
-      default:
-        x = screenWidth - windowWidth - 20;
-        y = 20;
+    if (mouseX !== undefined && mouseY !== undefined) {
+      // 在鼠标右下角偏移显示
+      x = mouseX + 20;
+      y = mouseY + 20;
+    } else {
+      // 默认位置：屏幕右下角
+      const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+      x = screenWidth - windowWidth - 20;
+      y = screenHeight - windowHeight - 20;
     }
 
     // 创建窗口
@@ -90,12 +77,21 @@ export class StatusIndicator {
   /**
    * 显示指示器
    */
-  public show(): void {
+  public show(mouseX?: number, mouseY?: number): void {
     if (!this.window) {
-      this.createWindow();
+      this.createWindow(mouseX, mouseY);
     }
 
     if (this.window) {
+      // 每次显示时更新位置
+      if (mouseX !== undefined && mouseY !== undefined) {
+        const windowWidth = 60;
+        const windowHeight = 60;
+        const x = mouseX + 20;
+        const y = mouseY + 20;
+        this.window.setPosition(x, y);
+      }
+      
       this.window.show();
     }
   }
@@ -115,6 +111,15 @@ export class StatusIndicator {
   public updateStatus(status: IndicatorStatus): void {
     if (this.window && this.window.webContents) {
       this.window.webContents.send('update-status', status);
+    }
+  }
+
+  /**
+   * 更新音量（0-1 范围）
+   */
+  public updateVolume(volume: number): void {
+    if (this.window && this.window.webContents) {
+      this.window.webContents.send('update-volume', volume);
     }
   }
 

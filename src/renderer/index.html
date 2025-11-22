@@ -12,58 +12,61 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 120px;
-      height: 120px;
+      width: 60px;
+      height: 60px;
+      -webkit-app-region: no-drag;
     }
 
-    #indicator {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
+    .siri-container {
+      position: relative;
+      width: 60px;
+      height: 60px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 40px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
+      gap: 2px;
+      background: transparent;
     }
 
-    /* 监听状态 - 绿色 */
-    #indicator.listening {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      animation: pulse 2s infinite;
+    /* Siri 波形条 */
+    .bar {
+      width: 3px;
+      height: 8px;
+      background: linear-gradient(180deg, 
+        rgba(0, 122, 255, 1) 0%,
+        rgba(88, 86, 214, 1) 50%,
+        rgba(255, 45, 85, 1) 100%);
+      border-radius: 1.5px;
+      box-shadow: 0 0 8px rgba(0, 122, 255, 0.5);
+      transition: height 0.05s ease-out;
     }
 
-    /* 处理状态 - 蓝色 */
-    #indicator.processing {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      animation: spin 1s linear infinite;
+    /* 监听状态 */
+    .listening .bar {
+      background: linear-gradient(180deg, 
+        rgba(0, 122, 255, 1) 0%,
+        rgba(88, 86, 214, 1) 50%,
+        rgba(255, 45, 85, 1) 100%);
+      box-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
     }
 
-    /* 错误状态 - 红色 */
-    #indicator.error {
-      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    /* 处理状态 */
+    .processing .bar {
+      background: linear-gradient(180deg, 
+        rgba(52, 199, 89, 1) 0%,
+        rgba(48, 209, 88, 1) 50%,
+        rgba(50, 215, 75, 1) 100%);
+      box-shadow: 0 0 10px rgba(52, 199, 89, 0.5);
+    }
+
+    /* 错误状态 */
+    .error .bar {
+      background: linear-gradient(180deg, 
+        rgba(255, 59, 48, 1) 0%,
+        rgba(255, 69, 58, 1) 50%,
+        rgba(255, 79, 68, 1) 100%);
+      box-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
       animation: shake 0.5s;
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.1);
-        opacity: 0.8;
-      }
-    }
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
     }
 
     @keyframes shake {
@@ -71,41 +74,68 @@
         transform: translateX(0);
       }
       25% {
-        transform: translateX(-10px);
+        transform: translateX(-3px);
       }
       75% {
-        transform: translateX(10px);
+        transform: translateX(3px);
       }
     }
   </style>
 </head>
 <body>
-  <div id="indicator" class="listening">🎤</div>
+  <div id="indicator" class="siri-container listening">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
   <script>
     const { ipcRenderer } = require('electron');
 
     const indicator = document.getElementById('indicator');
+    const bars = document.querySelectorAll('.bar');
+    
+    // 每个条的随机因子，用于创建波形效果
+    const barFactors = Array.from({ length: 10 }, (_, i) => {
+      // 中间的条更高，两边的条更低
+      const center = 5;
+      const distance = Math.abs(i - center);
+      return 1 - (distance * 0.15);
+    });
 
     // 监听状态更新
     ipcRenderer.on('update-status', (event, status) => {
       // 移除所有状态类
-      indicator.className = '';
+      indicator.className = 'siri-container';
       
-      // 添加新状态类和图标
-      switch (status) {
-        case 'listening':
-          indicator.className = 'listening';
-          indicator.textContent = '🎤';
-          break;
-        case 'processing':
-          indicator.className = 'processing';
-          indicator.textContent = '⚡';
-          break;
-        case 'error':
-          indicator.className = 'error';
-          indicator.textContent = '❌';
-          break;
-      }
+      // 添加新状态类
+      indicator.className = `siri-container ${status}`;
+    });
+
+    // 监听音量更新
+    ipcRenderer.on('update-volume', (event, volume) => {
+      // 根据音量更新每个条的高度
+      bars.forEach((bar, index) => {
+        // 基础高度 8px，最大高度 45px（适配更小的窗口）
+        const minHeight = 8;
+        const maxHeight = 45;
+        
+        // 应用音量和条的因子
+        const factor = barFactors[index];
+        const height = minHeight + (maxHeight - minHeight) * volume * factor;
+        
+        // 添加一些随机抖动，使波形更自然
+        const jitter = (Math.random() - 0.5) * 4 * volume;
+        const finalHeight = Math.max(minHeight, Math.min(maxHeight, height + jitter));
+        
+        bar.style.height = `${finalHeight}px`;
+      });
     });
   </script>
 </body>

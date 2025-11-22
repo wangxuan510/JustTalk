@@ -4,9 +4,9 @@
   "description": "实时语音转文字工具，使用阿里 FunASR 服务",
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/assets dist/renderer && cp -r src/assets/* dist/assets/ 2>/dev/null || true && cp src/renderer/index.html dist/renderer/",
     "start": "npm run build && electron .",
-    "dev": "tsc && electron .",
+    "dev": "tsc && mkdir -p dist/assets dist/renderer && cp -r src/assets/* dist/assets/ 2>/dev/null || true && cp src/renderer/index.html dist/renderer/ && electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
@@ -43,7 +43,10 @@
       "arch": [
         "x64"
       ],
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "extendInfo": {
+        "LSUIElement": true
+      }
     },
     "files": [
       "dist/**/*",
