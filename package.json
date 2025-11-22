@@ -1,0 +1,54 @@
+{
+  "name": "voice-to-text-tool",
+  "version": "1.0.0",
+  "description": "实时语音转文字工具，使用阿里 FunASR 服务",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron .",
+    "dev": "tsc && electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [
+    "voice",
+    "speech-to-text",
+    "funasr",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.10",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "node-record-lpcm16": "^1.0.1",
+    "robotjs": "^0.6.0",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0"
+  },
+  "build": {
+    "appId": "com.voicetotext.app",
+    "productName": "VoiceToText",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "arch": [
+        "x64"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "files": [
+      "dist/**/*",
+      "config.json",
+      "package.json"
+    ]
+  }
+}

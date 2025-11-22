@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Voice to Text - Status Indicator</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 120px;
+      height: 120px;
+    }
+
+    #indicator {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    /* 监听状态 - 绿色 */
+    #indicator.listening {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      animation: pulse 2s infinite;
+    }
+
+    /* 处理状态 - 蓝色 */
+    #indicator.processing {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      animation: spin 1s linear infinite;
+    }
+
+    /* 错误状态 - 红色 */
+    #indicator.error {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      animation: shake 0.5s;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      25% {
+        transform: translateX(-10px);
+      }
+      75% {
+        transform: translateX(10px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="indicator" class="listening">🎤</div>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const indicator = document.getElementById('indicator');
+
+    // 监听状态更新
+    ipcRenderer.on('update-status', (event, status) => {
+      // 移除所有状态类
+      indicator.className = '';
+      
+      // 添加新状态类和图标
+      switch (status) {
+        case 'listening':
+          indicator.className = 'listening';
+          indicator.textContent = '🎤';
+          break;
+        case 'processing':
+          indicator.className = 'processing';
+          indicator.textContent = '⚡';
+          break;
+        case 'error':
+          indicator.className = 'error';
+          indicator.textContent = '❌';
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
