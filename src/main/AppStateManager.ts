@@ -144,6 +144,16 @@ export class AppStateManager {
       // 停止音频捕获
       this.audioCapture.stop();
 
+      // 发送剩余的音频数据
+      if (this.audioBuffer.length > 0 && this.funasrClient.getTaskStatus()) {
+        const audioData = Buffer.concat(this.audioBuffer);
+        this.funasrClient.sendAudio(audioData);
+      }
+
+      // 清空音频缓冲区
+      this.audioBuffer = [];
+      this.audioBufferSize = 0;
+
       // 结束 FunASR 任务
       if (this.funasrClient.getTaskStatus()) {
         this.funasrClient.finishTask();
@@ -166,6 +176,11 @@ export class AppStateManager {
     }
   }
 
+  // 音频缓冲区（用于累积音频数据）
+  private audioBuffer: Buffer[] = [];
+  private audioBufferSize: number = 0;
+  private readonly MIN_AUDIO_CHUNK_SIZE = 3200; // 最小发送块大小（约 100ms 的音频）
+
   /**
    * 处理音频数据
    */
@@ -175,9 +190,21 @@ export class AppStateManager {
       const volume = AudioCapture.calculateVolume(chunk);
       this.statusIndicator.updateVolume(volume);
 
-      // 将音频数据发送到 FunASR
-      if (this.funasrClient.getTaskStatus()) {
-        this.funasrClient.sendAudio(chunk);
+      // 累积音频数据
+      this.audioBuffer.push(chunk);
+      this.audioBufferSize += chunk.length;
+
+      // 当累积的音频数据达到最小块大小时，发送到 FunASR
+      if (this.audioBufferSize >= this.MIN_AUDIO_CHUNK_SIZE) {
+        const audioData = Buffer.concat(this.audioBuffer);
+        
+        if (this.funasrClient.getTaskStatus()) {
+          this.funasrClient.sendAudio(audioData);
+        }
+
+        // 清空缓冲区
+        this.audioBuffer = [];
+        this.audioBufferSize = 0;
       }
     } catch (error) {
       console.error('发送音频数据失败:', error);

@@ -19,9 +19,9 @@ export class StatusIndicator {
       return;
     }
 
-    // 窗口尺寸（方形，更小）
-    const windowWidth = 60;
-    const windowHeight = 60;
+    // 窗口尺寸（液态球，更小）
+    const windowWidth = 40;
+    const windowHeight = 40;
 
     // 如果提供了鼠标位置，在鼠标右下角显示
     // 否则使用默认位置
@@ -47,6 +47,7 @@ export class StatusIndicator {
       y,
       frame: false,              // 无边框
       transparent: true,         // 透明背景
+      backgroundColor: '#00000000', // 完全透明的背景色
       alwaysOnTop: true,        // 置顶
       resizable: false,         // 不可调整大小
       movable: false,           // 不可移动
@@ -59,11 +60,15 @@ export class StatusIndicator {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
+        backgroundThrottling: false,
       },
     });
 
     // 加载 HTML
     this.window.loadFile(path.join(__dirname, '../renderer/index.html'));
+
+    // 确保窗口背景透明
+    this.window.setBackgroundColor('#00000000');
 
     // 窗口关闭时清理
     this.window.on('closed', () => {
@@ -85,10 +90,10 @@ export class StatusIndicator {
     if (this.window) {
       // 每次显示时更新位置
       if (mouseX !== undefined && mouseY !== undefined) {
-        const windowWidth = 60;
-        const windowHeight = 60;
-        const x = mouseX + 20;
-        const y = mouseY + 20;
+        const windowWidth = 40;
+        const windowHeight = 40;
+        const x = mouseX + 15;
+        const y = mouseY + 15;
         this.window.setPosition(x, y);
       }
       
