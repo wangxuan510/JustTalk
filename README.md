@@ -1,192 +1,278 @@
-# 语音转文字工具
+# 🎤 VoiceToText - 语音转文字工具
 
-实时流式语音转文字工具，使用阿里 FunASR 服务，运行在 macOS 系统上。
+<div align="center">
 
-## 功能特性
+一个简单易用的 macOS 语音转文字工具，支持全局快捷键激活，实时语音识别并自动输入到任何应用中。
 
-- 🎤 实时语音识别，边说边转文字
-- ⌨️ 全局快捷键控制，无需切换窗口
-- 📝 自动插入到任意输入框
-- 🎯 简洁界面，不干扰工作流程
-- 🔒 安全可靠，数据加密传输
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
+[![Electron](https://img.shields.io/badge/Electron-28.0.0-blue.svg)](https://www.electronjs.org/)
 
-## 系统要求
+[功能特性](#-功能特性) • [快速开始](#-快速开始) • [使用方法](#-使用方法) • [开发指南](#-开发指南) • [贡献](#-贡献)
+
+</div>
+
+---
+
+## ✨ 功能特性
+
+- 🚀 **一键激活** - 使用 `Command + 2` 快捷键，随时随地启动语音输入
+- 🎯 **全局输入** - 支持任何应用（浏览器、备忘录、微信、Slack 等）
+- 🧠 **智能识别** - 基于阿里云 DashScope FunASR，识别准确率高
+- 🔄 **实时转换** - 边说边显示，即时反馈
+- 🎨 **简洁界面** - 托盘应用，不占用桌面空间
+- 📊 **状态指示** - 可视化音量和识别状态
+- 🔒 **隐私安全** - API Key 本地存储，数据不留存
+- ⚙️ **自定义配置** - 可自定义快捷键和服务配置
+
+## 🚀 快速开始
+
+### 系统要求
 
 - macOS 10.13 或更高版本
-- Intel 芯片（x64）或 Apple Silicon 芯片（M1/M2/M3）
+- Intel 芯片 Mac
+- 互联网连接
 - 麦克风权限
-- 网络连接
 
-## 安装
+### 安装
 
-1. 下载最新版本的 .dmg 文件
-2. 双击安装
-3. 配置 API Key（见下方）
+1. **下载应用**
+   - 从 [Releases](https://github.com/yourusername/voice-to-text-tool/releases) 下载最新的 `VoiceToText-x.x.x.dmg`
 
-## 配置
+2. **安装应用**
+   - 双击 DMG 文件
+   - 拖动 VoiceToText.app 到 Applications 文件夹
 
-哎，你现在在说话都录下来了。你干啥去了？干嘛呢？我想起来我的时代没了，回来。### 首次使用配置
+3. **首次运行**
+   - 打开 Applications 文件夹
+   - 双击 VoiceToText.app
+   - 授予麦克风权限
 
-1. **复制配置文件**
-   ```bash
-   cp config.example.json config.json
-   ```
+### 配置 API Key
 
-2. **获取 API Key**
-   - 访问 [阿里云 DashScope](https://dashscope.aliyuncs.com/)
-   - 注册并登录
-   - 在控制台获取 API Key
+1. 访问 [阿里云 DashScope](https://dashscope.aliyuncs.com/) 获取 API Key
+2. 点击托盘图标 → 配置
+3. 输入 API Key（格式：`sk-xxxxxxxx`）
+4. 点击保存
 
-3. **配置 API Key**
-   
-   编辑 `config.json` 文件，将 `your-dashscope-api-key-here` 替换为你的实际 API Key：
-   ```json
-   {
-     "funASR": {
-       "apiKey": "sk-xxxxxxxxxxxxxxxxxxxxxxxx",
-       "url": "wss://dashscope.aliyuncs.com/api-ws/v1/inference",
-       "model": "fun-asr-realtime"
-     }
-   }
-   ```
+## 💡 使用方法
 
-4. **自定义快捷键（可选）**
-   
-   在 `config.json` 中修改快捷键：
-   ```json
-   {
-     "hotkeys": {
-       "activate": "Command+2",
-       "deactivate": "Command+2"
-     }
-   }
-   ```
+### 基本使用
 
-### 配置说明
+1. 点击任意文本输入框
+2. 按 `Command + 2` 开始录音
+3. 开始说话，文字会实时输入
+4. 再按 `Command + 2` 停止录音
 
-- `funASR.apiKey`: 阿里云 DashScope API Key（必填）
-- `funASR.url`: FunASR WebSocket 服务地址（默认即可）
-- `funASR.model`: 使用的模型（默认 fun-asr-realtime）
-- `hotkeys.activate`: 激活语音识别的快捷键
-- `hotkeys.deactivate`: 停止语音识别的快捷键（可与 activate 相同，实现切换）
-- `audio`: 音频参数（默认即可）
-- `ui.indicatorPosition`: 状态指示器位置（默认 top-right）
+### 自定义快捷键
 
-**注意**: `config.json` 包含敏感信息，已被 .gitignore 忽略，不会被提交到 Git 仓库。
+1. 点击托盘图标 → 配置
+2. 在快捷键设置中点击"录制"
+3. 按下你想要的快捷键组合
+4. 点击保存
 
-## 使用方法
+### 使用场景
 
-1. 点击任意输入框，使其获得焦点
-2. 按下 `Cmd+Shift+V` 激活语音识别
-3. 开始说话，文字会实时出现在输入框中
-4. 按下 `Cmd+Shift+S` 停止识别
+| 场景 | 应用示例 | 使用方法 |
+|------|----------|----------|
+| 📝 写作 | 备忘录、Pages | 快速记录想法和灵感 |
+| 📧 邮件 | Mail、Outlook | 语音回复邮件 |
+| 💬 聊天 | 微信、QQ、Slack | 快速回复消息 |
+| 🔍 搜索 | Safari、Chrome | 语音搜索关键词 |
+| 📊 办公 | Excel、Numbers | 快速输入数据 |
+| 🎓 学习 | Notion、Obsidian | 语音做笔记 |
 
-## 快捷键
+## 🛠️ 开发指南
 
-- **激活**: `Cmd+Shift+V`
-- **停止**: `Cmd+Shift+S`
-
-可在 `config.json` 中自定义快捷键。
-
-## 开发
-
-### 前置要求
-
-- Node.js 16+
-- npm 或 yarn
-- macOS 10.13+
-
-### 安装依赖
+### 环境准备
 
 ```bash
+# 克隆仓库
+git clone https://github.com/yourusername/voice-to-text-tool.git
+cd voice-to-text-tool
+
+# 安装依赖
 npm install
+
+# 重建原生模块
+npx electron-rebuild
 ```
 
-**注意**: 某些依赖（如 robotjs）需要编译原生模块，可能需要安装 Xcode Command Line Tools：
+### 配置开发环境
 
 ```bash
-xcode-select --install
+# 复制配置文件
+cp config.example.json config.json
+
+# 编辑 config.json，填入你的 API Key
 ```
 
-### 开发模式
+### 开发命令
 
 ```bash
+# 开发模式（带配置检查）
 npm run dev
-```
 
-### 构建
-
-```bash
+# 编译 TypeScript
 npm run build
+
+# 运行编译后的应用
+npm start
+
+# 打包应用
+npm run dist:mac-intel    # Intel Mac
+npm run dist:mac-arm      # Apple Silicon
+npm run dist:universal    # 通用版本
 ```
 
-### 打包
+### 项目结构
 
-生成可分发的应用：
+```
+voice-to-text-tool/
+├── src/
+│   ├── main/              # 主进程
+│   │   ├── index.ts       # 应用入口
+│   │   ├── AppStateManager.ts    # 状态管理
+│   │   ├── AudioCapture.ts       # 音频录制
+│   │   ├── FunASRClient.ts       # WebSocket 客户端
+│   │   ├── TextInjector.ts       # 文本注入
+│   │   ├── ConfigManager.ts      # 配置管理
+│   │   ├── HotkeyManager.ts      # 快捷键管理
+│   │   └── StatusIndicator.ts    # 状态指示器
+│   ├── renderer/          # 渲染进程
+│   │   ├── config.html    # 配置界面
+│   │   └── config.js      # 配置逻辑
+│   ├── preload/           # Preload 脚本
+│   └── types/             # TypeScript 类型定义
+├── scripts/               # 构建脚本
+├── dist/                  # 编译输出
+└── release/               # 打包输出
+```
 
+### 技术栈
+
+- **框架**: Electron 28.0.0
+- **语言**: TypeScript 5.3.3
+- **语音识别**: 阿里云 DashScope FunASR
+- **音频录制**: node-record-lpcm16
+- **自动化**: robotjs
+- **构建**: electron-builder
+
+## 🔧 配置说明
+
+### 配置文件位置
+
+- **开发模式**: `./config.json`
+- **生产模式**: `~/Library/Application Support/VoiceToText/config.json`
+
+### 配置文件格式
+
+```json
+{
+  "funASR": {
+    "apiKey": "sk-your-api-key-here",
+    "url": "wss://dashscope.aliyuncs.com/api-ws/v1/inference",
+    "model": "fun-asr-realtime"
+  },
+  "hotkeys": {
+    "activate": "Command+2",
+    "deactivate": "Command+2"
+  },
+  "audio": {
+    "sampleRate": 16000,
+    "channels": 1,
+    "bitDepth": 16,
+    "encoding": "signed-integer"
+  },
+  "ui": {
+    "indicatorPosition": "top-right"
+  }
+}
+```
+
+## ❓ 常见问题
+
+### Q: 应用无法打开？
+**A**: 右键点击应用 → 打开，或在终端运行：
 ```bash
-# 同时构建 Intel 和 Apple Silicon 版本
-npm run dist
-
-# 只构建 Intel 版本（x64）
-npm run dist:mac-intel
-
-# 只构建 Apple Silicon 版本（arm64）
-npm run dist:mac-arm
-
-# 构建通用版本（同时支持两种架构，文件较大）
-npm run dist:universal
+xattr -cr /Applications/VoiceToText.app
 ```
 
-这将在 `dist` 目录下生成 .dmg 安装包。
+### Q: 按快捷键没反应？
+**A**: 检查：
+- 是否配置了 API Key
+- 是否点击了输入框
+- 快捷键是否被其他应用占用
+- 是否授予了麦克风权限
 
-### 调试
+### Q: 识别不准确？
+**A**: 改善识别效果：
+- 说话清晰，语速适中
+- 保持环境安静
+- 麦克风距离适中（20-30cm）
+- 使用普通话
 
-查看控制台输出：
-
+### Q: 如何卸载？
+**A**: 
+1. 退出应用
+2. 将 `/Applications/VoiceToText.app` 拖到废纸篓
+3. 删除配置文件（可选）：
 ```bash
-npm run dev
+rm -rf ~/Library/Application\ Support/VoiceToText/
 ```
 
-然后在 Electron 窗口中按 `Cmd+Option+I` 打开开发者工具。
+## 🤝 贡献
 
-## 故障排查
+欢迎贡献代码、报告问题或提出建议！
 
-### 无法识别语音
+### 贡献方式
 
-1. 检查 API Key 是否正确配置
-2. 检查网络连接
-3. 确认麦克风权限已授予
-4. 查看控制台日志
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
-### 快捷键不工作
+### 开发规范
 
-1. 检查快捷键是否被其他应用占用
-2. 尝试在 config.json 中修改快捷键
-3. 重启应用
+- 使用 TypeScript 严格模式
+- 遵循现有代码风格
+- 添加必要的注释
+- 更新相关文档
 
-### 文字无法插入
+## 📝 更新日志
 
-1. 确保输入框已获得焦点
-2. 尝试使用剪贴板粘贴（工具会自动复制）
-3. 检查应用是否有辅助功能权限
+### v1.0.0 (2024-11-24)
 
-## 依赖说明
+- 🎉 首次发布
+- ✨ 支持实时语音识别
+- ✨ 全局快捷键激活
+- ✨ 自动文本输入
+- ✨ 可视化状态指示器
+- ✨ 自定义快捷键配置
 
-- **electron**: 桌面应用框架
-- **ws**: WebSocket 客户端
-- **uuid**: 生成唯一 ID
-- **node-record-lpcm16**: 音频录制
-- **robotjs**: 键盘输入模拟
+## 📄 许可证
 
-## 技术栈
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
-- Electron
-- TypeScript
-- FunASR WebSocket API
-- node-record-lpcm16
-- @nut-tree/nut-js
+## 🙏 致谢
 
-## 许可证
+- [Electron](https://www.electronjs.org/) - 跨平台桌面应用框架
+- [阿里云 DashScope](https://dashscope.aliyuncs.com/) - 语音识别服务
+- [robotjs](https://github.com/octalmage/robotjs) - 桌面自动化
+- [node-record-lpcm16](https://github.com/gillesdemey/node-record-lpcm16) - 音频录制
 
-MIT
+## 📮 联系方式
+
+- 问题反馈: [GitHub Issues](https://github.com/yourusername/voice-to-text-tool/issues)
+- 功能建议: [GitHub Discussions](https://github.com/yourusername/voice-to-text-tool/discussions)
+
+---
+
+<div align="center">
+
+**如果这个项目对你有帮助，请给个 ⭐️ Star 支持一下！**
+
+Made with ❤️ for macOS users
+
+</div>
