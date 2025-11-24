@@ -1,4 +1,4 @@
-# 🎤 VoiceToText - 语音转文字工具
+# 🎤 JustTalk - 语音转文字工具
 
 <div align="center">
 
