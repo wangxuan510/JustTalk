@@ -13,11 +13,13 @@ const EXAMPLE_PATH = path.join(__dirname, '../config.example.json');
 
 console.log('🔍 检查配置文件...\n');
 
-// 检查 config.json 是否存在
+// 检查 config.json 是否存在（开发模式）
 if (!fs.existsSync(CONFIG_PATH)) {
-  console.error('❌ 错误: config.json 不存在');
-  console.log('💡 请运行: cp config.example.json config.json');
-  process.exit(1);
+  console.log('⚠️  config.json 不存在（开发模式）');
+  console.log('💡 首次运行时，应用会自动创建配置文件');
+  console.log('💡 或手动创建: cp config.example.json config.json\n');
+  console.log('✅ 跳过配置检查，继续启动...\n');
+  process.exit(0);
 }
 
 // 读取配置

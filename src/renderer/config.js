@@ -1,7 +1,11 @@
-// 使用安全的 API
-const configAPI = window.configAPI;
+// 使用立即执行函数避免全局变量冲突
+(function() {
+  'use strict';
+  
+  // 使用安全的 API
+  const configAPI = window.configAPI;
 
-// 加载配置
+  // 加载配置
 async function loadConfig() {
   try {
     return await configAPI.loadConfig();
@@ -201,3 +205,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
+
+})(); // 立即执行函数结束

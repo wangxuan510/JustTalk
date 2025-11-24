@@ -21,8 +21,24 @@ async function initialize() {
   try {
     console.log('初始化应用...');
 
+    // 确定配置文件路径
+    // 开发模式：使用项目目录的 config.json
+    // 生产模式：使用用户数据目录的 config.json
+    let configPath: string;
+    
+    if (app.isPackaged) {
+      // 生产模式：用户数据目录
+      const userDataPath = app.getPath('userData');
+      configPath = path.join(userDataPath, 'config.json');
+      console.log('生产模式 - 配置文件路径:', configPath);
+    } else {
+      // 开发模式：项目目录
+      configPath = path.join(process.cwd(), 'config.json');
+      console.log('开发模式 - 配置文件路径:', configPath);
+    }
+
     // 加载配置
-    configManager = new ConfigManager();
+    configManager = new ConfigManager(configPath);
     
     if (!configManager.configExists()) {
       console.log('配置文件不存在，创建默认配置');
@@ -165,13 +181,10 @@ function validateConfigObject(config: any): void {
  * 用于配置窗口的安全文件操作（在主进程中处理，而不是在 Preload 中）
  */
 function registerIpcHandlers() {
-  const CONFIG_PATH = path.join(process.cwd(), 'config.json');
-
   // 加载配置
   ipcMain.handle('load-config', async () => {
     try {
-      const configData = await fs.promises.readFile(CONFIG_PATH, 'utf-8');
-      const config = JSON.parse(configData);
+      const config = configManager.getConfig();
       
       // 验证加载的配置
       validateConfigObject(config);
@@ -189,13 +202,8 @@ function registerIpcHandlers() {
       // 严格验证配置对象
       validateConfigObject(config);
       
-      // 使用 ConfigManager 进行额外验证
-      const tempConfigManager = new ConfigManager();
-      // 访问私有方法进行验证
-      (tempConfigManager as any).validateConfig(config);
-      
-      // 验证通过后保存
-      await fs.promises.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+      // 使用 ConfigManager 保存配置
+      configManager.saveConfig(config);
       
       console.log('配置已安全保存');
       return true;
@@ -205,7 +213,7 @@ function registerIpcHandlers() {
     }
   });
 
-  console.log('IPC 处理器注册成功（已启用安全验证）');
+
 }
 
 /**

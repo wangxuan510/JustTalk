@@ -59,8 +59,14 @@
     },
     "files": [
       "dist/**/*",
-      "config.json",
-      "package.json"
+      "package.json",
+      "!config.json"
+    ],
+    "extraResources": [
+      {
+        "from": "config.example.json",
+        "to": "config.example.json"
+      }
     ]
   }
 }
