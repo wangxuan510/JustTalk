@@ -21,7 +21,7 @@
 - 🧠 **智能识别** - 基于阿里云 DashScope FunASR，识别准确率高
 - 🔄 **实时转换** - 边说边显示，即时反馈
 - 🎨 **简洁界面** - 托盘应用，不占用桌面空间
-- 📊 **状态指示** - 可视化音量和识别状态
+- 📊 **状态指示** - 识别状态可视化
 - 🔒 **隐私安全** - API Key 本地存储，数据不留存
 - ⚙️ **自定义配置** - 可自定义快捷键和服务配置
 
@@ -31,29 +31,49 @@
 
 - macOS 10.13 或更高版本
 - Intel 芯片 Mac
+- Node.js 18+
 - 互联网连接
 - 麦克风权限
 
-### 安装
+### 从源码构建
 
-1. **下载应用**
-   - 从 [Releases](https://github.com/yourusername/voice-to-text-tool/releases) 下载最新的 `VoiceToText-x.x.x.dmg`
+1. **克隆仓库**
+   ```bash
+   git clone https://github.com/wangxuan510/JustTalk.git
+   cd JustTalk
+   ```
 
-2. **安装应用**
-   - 双击 DMG 文件
-   - 拖动 VoiceToText.app 到 Applications 文件夹
+2. **安装依赖**
+   ```bash
+   npm install
+   npx electron-rebuild
+   ```
 
-3. **首次运行**
-   - 打开 Applications 文件夹
-   - 双击 VoiceToText.app
-   - 授予麦克风权限
+3. **配置 API Key**
+   ```bash
+   cp config.example.json config.json
+   # 编辑 config.json，填入你的阿里云 DashScope API Key
+   ```
+   
+   访问 [阿里云 DashScope](https://dashscope.aliyuncs.com/) 获取 API Key
 
-### 配置 API Key
+4. **运行应用**
+   ```bash
+   npm run dev
+   ```
 
-1. 访问 [阿里云 DashScope](https://dashscope.aliyuncs.com/) 获取 API Key
-2. 点击托盘图标 → 配置
-3. 输入 API Key（格式：`sk-xxxxxxxx`）
-4. 点击保存
+5. **打包应用（可选）**
+   ```bash
+   npm run dist:mac-intel
+   # 打包后的 DMG 文件在 release/ 目录
+   ```
+
+### 首次使用
+
+1. 应用启动后，托盘会显示图标
+2. 点击托盘图标 → 配置，确认 API Key 已正确配置
+3. 授予麦克风权限（首次使用时会提示）
+4. 开始使用语音输入功能
 
 ## 💡 使用方法
 
@@ -88,22 +108,17 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/voice-to-text-tool.git
-cd voice-to-text-tool
+git clone https://github.com/wangxuan510/JustTalk.git
+cd JustTalk
 
 # 安装依赖
 npm install
 
 # 重建原生模块
 npx electron-rebuild
-```
 
-### 配置开发环境
-
-```bash
-# 复制配置文件
+# 配置 API Key
 cp config.example.json config.json
-
 # 编辑 config.json，填入你的 API Key
 ```
 
@@ -128,7 +143,7 @@ npm run dist:universal    # 通用版本
 ### 项目结构
 
 ```
-voice-to-text-tool/
+JustTalk/
 ├── src/
 │   ├── main/              # 主进程
 │   │   ├── index.ts       # 应用入口
@@ -264,8 +279,8 @@ rm -rf ~/Library/Application\ Support/VoiceToText/
 
 ## 📮 联系方式
 
-- 问题反馈: [GitHub Issues](https://github.com/yourusername/voice-to-text-tool/issues)
-- 功能建议: [GitHub Discussions](https://github.com/yourusername/voice-to-text-tool/discussions)
+- 问题反馈: [GitHub Issues](https://github.com/wangxuan510/JustTalk/issues)
+- 功能建议: [GitHub Discussions](https://github.com/wangxuan510/JustTalk/discussions)
 
 ---
 
